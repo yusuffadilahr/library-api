@@ -13,11 +13,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getMember = exports.createMember = void 0;
-const uuid_1 = require("uuid");
+// import { v4 as uuid } from "uuid";
 const util_1 = __importDefault(require("util"));
 const connection_1 = __importDefault(require("../../connection"));
+const nanoid_1 = require("nanoid");
 const query = util_1.default.promisify(connection_1.default.query).bind(connection_1.default);
-const uid = (0, uuid_1.v4)();
 const createMember = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { first_name, last_name, email, phone_number, address, id_card_number } = req.body;
@@ -25,13 +25,11 @@ const createMember = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             throw { msg: 'Harap diisi terlebih dahulu', status: 400 };
         if (id_card_number.length < 15)
             throw { msg: 'Harap masukan nomor ID CARD dengan benar', status: 400 };
-        const id = uid;
-        console.log(id);
+        const id = (0, nanoid_1.nanoid)(5);
         const date = new Date();
         const year = date.getFullYear();
         const month = date.getMonth() + 1;
         const day = date.getDate();
-        // a0415957-cd6b-4cee-b491-505c603022f4
         const members_id = `MMBR-${id}-${year}${month}${day}`;
         yield query({
             sql: 'insert into members (id, first_name, last_name, email, phone_number, address, id_card_number) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -46,7 +44,7 @@ const createMember = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     catch (error) {
         res.status(error.status || 500).json({
             error: false,
-            message: error.msg || error,
+            message: error.msg,
             data: []
         });
     }
