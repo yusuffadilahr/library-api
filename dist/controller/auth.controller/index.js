@@ -21,23 +21,42 @@ const loginAdmin = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     try {
         const { username, password } = req.body;
         const data = yield query({
-            sql: `SELECT * FROM staffs 
+            sql: `SELECT 
+            staffs.id AS staff_id,
+            staffs.username,
+            staffs.password,
+            staffs.locations_id,
+            staffs.email,
+            staffs.first_name,
+            staffs.last_name,
+            staffs.created_at,
+            staff_schedule.id AS schedule_id,
+            staff_schedule.start_schedule,
+            staff_schedule.end_schedule,
+            locations.id AS location_id,
+            locations.location,
+            locations.city,
+            locations.province,
+            locations.address,
+            locations.phone_number
+            FROM staffs 
             join staff_schedule on staffs.staff_schedule_id = staff_schedule.id
             join locations on staffs.locations_id = locations.id
             where username = ? and password = ?`,
             values: [username, password]
         });
+        console.log(data);
         const checkedSchedule = (0, date_fns_1.isAfter)((0, date_fns_1.format)(new Date(), 'yyyy-MM-dd kk:mm:ss'), `${(0, date_fns_1.format)(new Date(), 'yyyy-MM-dd')} ${data[0].start_schedule}:00`)
             && (0, date_fns_1.isBefore)((0, date_fns_1.format)(new Date(), 'yyyy-MM-dd kk:mm:ss'), `${(0, date_fns_1.format)(new Date(), 'yyyy-MM-dd')} ${data[0].end_schedule}:00`);
         if (!checkedSchedule)
             throw { msg: 'Anda membuka pada saat diluar jam kerja', status: 400 };
         if (data.length == 0)
             throw { msg: 'Username Password salah!', status: 400 };
-        res.status(200).json({
+        res.status(201).json({
             error: false,
             message: 'Berhasil masuk',
             data: [{
-                    id: data[0].id,
+                    id: data[0].staff_id,
                     username: data[0].username,
                     location: data[0].location,
                     firstname: data[0].first_name,

@@ -9,14 +9,35 @@ const query = util.promisify(db.query).bind(db)
 export const getDataTransaction = async (req: Request, res: Response) => {
     try {
         const dataTransaction: any = await query({
-            sql: `select * from member_transaction
+            sql: `select 
+            member_transaction.id AS member_trc_id,
+            member_transaction.created_at,
+            member_transaction.due_date,
+            member_transaction.return_date,
+            member_transaction.penalty_charge,
+            member_transaction.books_id,
+            members.id AS member_id,
+            members.first_name,
+            members.last_name,
+            members.email,
+            members.phone_number,
+            members.address,
+            members.id_card_number,
+            books.id AS book_id,
+            books.title,
+            books.description,
+            books.author,
+            books.publish_year
+            from member_transaction
             join members on member_transaction.members_id = members.id
             join books on member_transaction.books_id = books.id`
         })
 
+        console.log(dataTransaction)
+
         const response = dataTransaction.map((item: any) => {
             return {
-                id: item.id,
+                id: item.member_trc_id,
                 firstname: item.first_name,
                 lastname: item.last_name,
                 dueDate: item.due_date,
@@ -29,12 +50,36 @@ export const getDataTransaction = async (req: Request, res: Response) => {
         res.status(200).json({
             error: false,
             message: 'Berhasil mengambil data',
-            data: response
+            data: dataTransaction
         })
     } catch (error: any) {
         res.status(error.status || 500).json({
             error: true,
             message: error.msg || 'Ada kesalahan server',
+            data: []
+        })
+    }
+}
+
+export const searchAllMember = async (req: Request, res: Response) => {
+    try {
+        const { member } = req.query
+        const memberLike = '%' + member + '%'
+        const data: any = await query({
+            sql: `select * from members where id like '${memberLike}'`,
+        })
+        if (data.length == 0) throw { msg: 'Data tidak tersedia', status: 404 }
+
+        res.status(200).json({
+            error: false,
+            message: 'Berhasil menampilkan data',
+            data: data
+        })
+
+    } catch (error: any) {
+        res.status(error.status || 500).json({
+            error: true,
+            message: error.msg,
             data: []
         })
     }
@@ -101,7 +146,7 @@ export const postDataLending = async (req: Request, res: Response) => {
         const dueDateString = format(dueDate, 'yyyy-MM-dd')
 
         if (!members_id || !books_id || !staff_id) throw { msg: 'Harap diisi dan dilengkapi terlebih dahulu', status: 400 }
-       
+
         const dataBook: any = await query({
             sql: `select * from books where id = ?`,
             values: [books_id]
@@ -119,7 +164,7 @@ export const postDataLending = async (req: Request, res: Response) => {
             values: [members_id, date]
         })
         if (checkedMemberBooks.length > 5) throw { msg: 'Batas peminjaman sudah maximal, silahkan lakukan transaksi pada esok hari', status: 400 }
-        
+
         const checkedBooksData: any = await query({
             sql: `select * from member_transaction where members_id = ?
              and books_id = ? and due_date = ?`,
@@ -155,6 +200,8 @@ export const detailsTransaction = async (req: Request, res: Response) => {
             sql: `select * from member_transaction where id = ?`,
             values: [id]
         })
+
+        console.log(getDataTransaction)
 
         const checkedDate = format(getDataTransaction[0].return_date, 'yyyy-MM-dd')
 
@@ -201,7 +248,7 @@ export const detailsTransaction = async (req: Request, res: Response) => {
         console.log(error)
         res.status(error.status || 500).json({
             error: true,
-            message: error.msg || 'Ada kesalahan server',
+            message: error.msg || error.message,
             data: []
         })
     }

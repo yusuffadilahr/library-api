@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteDataTransaction = exports.detailsTransaction = exports.postDataLending = exports.searchBooks = exports.searchMemberMaxPeminjaman = exports.getDataTransaction = void 0;
+exports.deleteDataTransaction = exports.detailsTransaction = exports.postDataLending = exports.searchBooks = exports.searchMemberMaxPeminjaman = exports.searchAllMember = exports.getDataTransaction = void 0;
 const util_1 = __importDefault(require("util"));
 const connection_1 = __importDefault(require("../../connection"));
 const date_fns_1 = require("date-fns");
@@ -21,13 +21,33 @@ const query = util_1.default.promisify(connection_1.default.query).bind(connecti
 const getDataTransaction = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const dataTransaction = yield query({
-            sql: `select * from member_transaction
+            sql: `select 
+            member_transaction.id AS member_trc_id,
+            member_transaction.created_at,
+            member_transaction.due_date,
+            member_transaction.return_date,
+            member_transaction.penalty_charge,
+            member_transaction.books_id,
+            members.id AS member_id,
+            members.first_name,
+            members.last_name,
+            members.email,
+            members.phone_number,
+            members.address,
+            members.id_card_number,
+            books.id AS book_id,
+            books.title,
+            books.description,
+            books.author,
+            books.publish_year
+            from member_transaction
             join members on member_transaction.members_id = members.id
             join books on member_transaction.books_id = books.id`
         });
+        console.log(dataTransaction);
         const response = dataTransaction.map((item) => {
             return {
-                id: item.id,
+                id: item.member_trc_id,
                 firstname: item.first_name,
                 lastname: item.last_name,
                 dueDate: item.due_date,
@@ -40,7 +60,7 @@ const getDataTransaction = (req, res) => __awaiter(void 0, void 0, void 0, funct
         res.status(200).json({
             error: false,
             message: 'Berhasil mengambil data',
-            data: response
+            data: dataTransaction
         });
     }
     catch (error) {
@@ -52,6 +72,30 @@ const getDataTransaction = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.getDataTransaction = getDataTransaction;
+const searchAllMember = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { member } = req.query;
+        const memberLike = '%' + member + '%';
+        const data = yield query({
+            sql: `select * from members where id like '${memberLike}'`,
+        });
+        if (data.length == 0)
+            throw { msg: 'Data tidak tersedia', status: 404 };
+        res.status(200).json({
+            error: false,
+            message: 'Berhasil menampilkan data',
+            data: data
+        });
+    }
+    catch (error) {
+        res.status(error.status || 500).json({
+            error: true,
+            message: error.msg,
+            data: []
+        });
+    }
+});
+exports.searchAllMember = searchAllMember;
 const searchMemberMaxPeminjaman = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { member } = req.query;
@@ -162,6 +206,7 @@ const detailsTransaction = (req, res) => __awaiter(void 0, void 0, void 0, funct
             sql: `select * from member_transaction where id = ?`,
             values: [id]
         });
+        console.log(getDataTransaction);
         const checkedDate = (0, date_fns_1.format)(getDataTransaction[0].return_date, 'yyyy-MM-dd');
         const dataSplit = checkedDate.split('-');
         const dataEks = Number(dataSplit[0]) + Number(dataSplit[1]) + Number(dataSplit[2]);
@@ -199,7 +244,7 @@ const detailsTransaction = (req, res) => __awaiter(void 0, void 0, void 0, funct
         console.log(error);
         res.status(error.status || 500).json({
             error: true,
-            message: error.msg || 'Ada kesalahan server',
+            message: error.msg || error.message,
             data: []
         });
     }

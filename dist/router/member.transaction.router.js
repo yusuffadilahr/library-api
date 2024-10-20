@@ -7,7 +7,8 @@ const transactionRouter = (0, express_1.Router)();
 transactionRouter.get('/', member_transaction_controller_1.getDataTransaction);
 transactionRouter.get('/detail/:id', member_transaction_controller_1.detailsTransaction);
 transactionRouter.delete('/detail/:id', member_transaction_controller_1.deleteDataTransaction);
-transactionRouter.get('/search-member', member_transaction_controller_1.searchMemberMaxPeminjaman);
+transactionRouter.get('/search-member', member_transaction_controller_1.searchAllMember);
+transactionRouter.get('/search-transaction', member_transaction_controller_1.searchMemberMaxPeminjaman);
 transactionRouter.get('/search-books', member_transaction_controller_1.searchBooks);
 transactionRouter.post('/new-data-lending', member_transaction_controller_1.postDataLending);
 // ----------
