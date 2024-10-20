@@ -248,7 +248,7 @@ export const detailsTransaction = async (req: Request, res: Response) => {
         console.log(error)
         res.status(error.status || 500).json({
             error: true,
-            message: error.msg || error.message,
+            message: error.msg || 'Ada kesalahan server',
             data: []
         })
     }
@@ -258,16 +258,23 @@ export const deleteDataTransaction = async (req: Request, res: Response) => {
     try {
         const { id } = req.params
 
-        const data: any = await query({
-            sql: `select * from member_transaction where id = ?`,
+        // const data: any = await query({
+        //     sql: `select * from member_transaction where id = ?`,
+        //     values: [id]
+        // })
+
+        if (!id) throw { msg: 'Data tidak ada', status: 404 }
+        await query({
+            sql: 'delete from member_transaction where id = ?',
             values: [id]
         })
 
-        if (data[0].id == id) {
-            console.log('GAS HAPUS')
-        }
+        res.status(200).json({
+            error: false,
+            message: 'Buku berhasil dikembalikan',
+            data: []
+        })
 
-        console.log(data)
     } catch (error: any) {
         res.status(error.status || 500).json({
             error: true,

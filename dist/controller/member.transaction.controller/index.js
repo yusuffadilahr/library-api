@@ -244,7 +244,7 @@ const detailsTransaction = (req, res) => __awaiter(void 0, void 0, void 0, funct
         console.log(error);
         res.status(error.status || 500).json({
             error: true,
-            message: error.msg || error.message,
+            message: error.msg || 'Ada kesalahan server',
             data: []
         });
     }
@@ -253,14 +253,21 @@ exports.detailsTransaction = detailsTransaction;
 const deleteDataTransaction = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const data = yield query({
-            sql: `select * from member_transaction where id = ?`,
+        // const data: any = await query({
+        //     sql: `select * from member_transaction where id = ?`,
+        //     values: [id]
+        // })
+        if (!id)
+            throw { msg: 'Data tidak ada', status: 404 };
+        yield query({
+            sql: 'delete from member_transaction where id = ?',
             values: [id]
         });
-        if (data[0].id == id) {
-            console.log('GAS HAPUS');
-        }
-        console.log(data);
+        res.status(200).json({
+            error: false,
+            message: 'Buku berhasil dikembalikan',
+            data: []
+        });
     }
     catch (error) {
         res.status(error.status || 500).json({
