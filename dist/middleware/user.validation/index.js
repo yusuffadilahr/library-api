@@ -5,13 +5,13 @@ const userValidation = (req, res, next) => {
     try {
         const { username, password } = req.body;
         if (!username || !password)
-            throw { message: 'Harap diisi terlebih dahulu', status: 400 };
+            throw { msg: 'Harap diisi terlebih dahulu', status: 400 };
         next();
     }
     catch (error) {
-        res.status(500).json({
+        res.status(error.status || 500).json({
             error: true,
-            message: error,
+            message: error.msg || 'Something went wrong!',
             data: []
         });
     }
